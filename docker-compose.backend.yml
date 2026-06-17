@@ -1,0 +1,89 @@
+# Phase 1: DB + API + Bot only (deploy this first in Coolify).
+# The frontend is deployed separately later (frontend/Dockerfile) as its own resource.
+#
+# Domain assigned in Coolify UI:
+#   api -> https://bsgapi.rmoffice.online  (port 8000)
+#   db  -> internal only (NEVER expose publicly)
+#   bot -> no domain (Telegram long-polling worker)
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-attendance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in Coolify}
+      POSTGRES_DB: ${POSTGRES_DB:-attendance}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-attendance}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    expose:
+      - "8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-attendance}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-attendance}
+      JWT_SECRET: ${JWT_SECRET:?set in Coolify}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-720}
+      BOOTSTRAP_ADMIN_MOBILE: ${BOOTSTRAP_ADMIN_MOBILE:?set in Coolify}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set in Coolify}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-System Admin}
+      # Allow the dashboard origin now so it works the moment the frontend is deployed.
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://bsg.rmoffice.online}
+      MAX_PHOTO_AGE_DAYS: ${MAX_PHOTO_AGE_DAYS:-7}
+      INSIGHTFACE_PROVIDERS: CPUExecutionProvider
+      VISITOR_CROP_DIR: /app/var/visitor_crops
+      MEMBER_PHOTO_DIR: /app/var/member_photos
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    volumes:
+      - facemodels:/root/.insightface
+      - visitorcrops:/app/var/visitor_crops
+      - memberphotos:/app/var/member_photos
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    restart: unless-stopped
+
+  bot:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-attendance}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-attendance}
+      INSIGHTFACE_PROVIDERS: CPUExecutionProvider
+      VISITOR_CROP_DIR: /app/var/visitor_crops
+      MEMBER_PHOTO_DIR: /app/var/member_photos
+    volumes:
+      - facemodels:/root/.insightface
+      - visitorcrops:/app/var/visitor_crops
+      - memberphotos:/app/var/member_photos
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "-m", "app.telegram.bot"]
+    restart: unless-stopped
+
+  # Web UI to inspect the database. Connects to the `db` container internally.
+  # SECURITY: this is a database admin panel — protect it with Coolify Basic Auth,
+  # or only assign its domain while you need it, then remove the domain.
+  adminer:
+    image: adminer:4
+    expose:
+      - "8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: dracula
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  facemodels:
+  visitorcrops:
+  memberphotos:
