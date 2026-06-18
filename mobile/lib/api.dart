@@ -198,6 +198,105 @@ class Api {
         Uri.parse(_u('/api/v1/reports/absentees$q')), headers: s.authHeaders);
     return _decode(r) as List<dynamic>;
   }
+
+  // ==================== Admin management ====================
+
+  // ---- Churches ----
+  static Future<List<dynamic>> churches() async {
+    final r = await http.get(Uri.parse(_u('/api/v1/setup/churches')), headers: s.authHeaders);
+    return _decode(r) as List<dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> createChurch(String name) async {
+    final r = await http.post(Uri.parse(_u('/api/v1/setup/churches')),
+        headers: _jsonHeaders, body: jsonEncode({'name': name}));
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  // ---- Groups (create; list via groups()) ----
+  static Future<Map<String, dynamic>> createGroup(
+      {required int churchId, required String name, String? meetingDay}) async {
+    final r = await http.post(Uri.parse(_u('/api/v1/setup/groups')),
+        headers: _jsonHeaders,
+        body: jsonEncode(
+            {'church_id': churchId, 'name': name, 'meeting_day': meetingDay}));
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  // ---- Leaders ----
+  static Future<List<dynamic>> leaders() async {
+    final r = await http.get(Uri.parse(_u('/api/v1/setup/leaders')), headers: s.authHeaders);
+    return _decode(r) as List<dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> createLeader(
+      {required int bsgId,
+      required String name,
+      required String mobile,
+      required String password}) async {
+    final r = await http.post(Uri.parse(_u('/api/v1/setup/leaders')),
+        headers: _jsonHeaders,
+        body: jsonEncode({
+          'bsg_id': bsgId,
+          'name': name,
+          'mobile_number': mobile,
+          'password': password,
+        }));
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  static Future<void> deactivateLeader(int leaderId) async {
+    final r = await http.post(
+        Uri.parse(_u('/api/v1/setup/leaders/$leaderId/deactivate')),
+        headers: _jsonHeaders,
+        body: '{}');
+    _decode(r);
+  }
+
+  static Future<Map<String, dynamic>> leaderLinkCode(int leaderId) async {
+    final r = await http.post(
+        Uri.parse(_u('/api/v1/setup/leaders/$leaderId/telegram-link-code')),
+        headers: _jsonHeaders,
+        body: '{}');
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  // ---- Locations (cities / streets) ----
+  static Future<Map<String, dynamic>> createCity(String name) async {
+    final r = await http.post(Uri.parse(_u('/api/v1/lookups/cities')),
+        headers: _jsonHeaders, body: jsonEncode({'name': name}));
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  static Future<void> deleteCity(int id) async {
+    final r = await http.delete(Uri.parse(_u('/api/v1/lookups/cities/$id')),
+        headers: s.authHeaders);
+    _decode(r);
+  }
+
+  static Future<Map<String, dynamic>> createStreet(int cityId, String name) async {
+    final r = await http.post(Uri.parse(_u('/api/v1/lookups/streets')),
+        headers: _jsonHeaders, body: jsonEncode({'city_id': cityId, 'name': name}));
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  static Future<void> deleteStreet(int id) async {
+    final r = await http.delete(Uri.parse(_u('/api/v1/lookups/streets/$id')),
+        headers: s.authHeaders);
+    _decode(r);
+  }
+
+  // ---- Runtime settings ----
+  static Future<Map<String, dynamic>> getSettings() async {
+    final r = await http.get(Uri.parse(_u('/api/v1/setup/settings')), headers: s.authHeaders);
+    return _decode(r) as Map<String, dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> updateSettings(Map<String, dynamic> body) async {
+    final r = await http.put(Uri.parse(_u('/api/v1/setup/settings')),
+        headers: _jsonHeaders, body: jsonEncode(body));
+    return _decode(r) as Map<String, dynamic>;
+  }
 }
 
 class ApiException implements Exception {

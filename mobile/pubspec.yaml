@@ -1,7 +1,7 @@
 name: bsg_attendance
-description: Church Bible Study Attendance — mobile app for admins and leaders.
+description: Resurrection Ministries BSG — attendance app for admins and leaders.
 publish_to: "none"
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -18,6 +18,39 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/brand/
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+
+# App launcher icon (generated from the logo).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/brand/logo.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "#15110C"
+  adaptive_icon_foreground: "assets/brand/logo.png"
+
+# Native splash screen (shown while the app boots).
+flutter_native_splash:
+  color: "#15110C"
+  image: assets/brand/splash.png
+  fullscreen: true
+  android_12:
+    color: "#15110C"
+    image: assets/brand/logo.png

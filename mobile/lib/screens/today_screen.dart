@@ -103,14 +103,15 @@ class _MemberGrid extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 0.78,
+      childAspectRatio: 0.68,
       children: items.map((m) {
         final guest = m['is_guest'] == true;
         return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
               children: [
-                AuthImage(url: m['photo_url'], size: 96),
+                AuthImage(url: m['photo_url'], size: 86),
                 if (guest)
                   Positioned(
                     right: 0,
@@ -126,12 +127,14 @@ class _MemberGrid extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            Text(
-              '${m['name']} ${m['surname'] ?? ''}'.trim(),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13),
+            Flexible(
+              child: Text(
+                '${m['name']} ${m['surname'] ?? ''}'.trim(),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13),
+              ),
             ),
           ],
         );

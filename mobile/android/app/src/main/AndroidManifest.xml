@@ -2,7 +2,7 @@
     <!-- Network access + allow plain HTTP to the local backend (no TLS in dev). -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="bsg_attendance"
+        android:label="Resurrection BSG"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher">

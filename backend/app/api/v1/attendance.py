@@ -100,11 +100,14 @@ def today(
             for v in visitors
         ]
 
-    # Absent = active home members of this group not present today.
-    members = db.scalars(
-        select(BSGMember).where(BSGMember.bsg_id == bsg, BSGMember.status == "active")
-    ).all()
-    absent = [_member_card(db, m) for m in members if m.id not in present_ids]
+    # Absent = active home members not present — but only meaningful once a
+    # meeting exists for the day. With no meeting yet, nobody is "absent".
+    absent: list[MemberCard] = []
+    if meeting is not None:
+        members = db.scalars(
+            select(BSGMember).where(BSGMember.bsg_id == bsg, BSGMember.status == "active")
+        ).all()
+        absent = [_member_card(db, m) for m in members if m.id not in present_ids]
 
     return TodayOut(
         bsg_id=bsg, bsg_name=group.name, meeting_date=day,
